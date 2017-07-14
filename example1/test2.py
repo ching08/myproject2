@@ -1,4 +1,5 @@
-from gold_train.goldengate_tests.Lib import putil
+from Lib import putil
+
 
 
 def test_before():

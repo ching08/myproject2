@@ -1,5 +1,5 @@
 import pytest
-from gold_train.goldengate_tests.Lib import putil
+from Lib import putil
 
 # apply tc_logger fixture to all functions
 

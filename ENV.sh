@@ -22,7 +22,7 @@ echo "virtual folder: $virtual_folder"
 if [  ! -d $virtual_folder ]; then
     echo "Warning: virtual env not setup."
     echo "creating virtual env folder $virtual_folder"
-    virtualenv --python=python3.5 $virtual_folder
+    virtualenv --python=python2.7 $virtual_folder
     . $virtual_folder/bin/activate
     pip install -r ${TEST_HOME}/requirements.txt
     if [ -z $EC ] ; then
