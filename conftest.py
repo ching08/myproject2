@@ -16,11 +16,13 @@ def tc_logger(request):
     should be used globally for all tc
     '''
 
-    #print("--in tc_logger fixture")
+    print("--in tc_logger fixture")
    
     try:
+        # if there is class
         tcName = "%s.%s.%s" % (request.module.__name__, request.cls.__name__, request.node.name)
     except Exception:
+        # if there is no class
         tcName = "%s.%s" % (request.module.__name__, request.node.name)
 
     log_dir = os.environ.get('LOG_DEST_DIR', 'artifacts')
@@ -34,13 +36,26 @@ def tc_logger(request):
 
     # redirect logging
    
-    myformat = logging.Formatter('%(asctime)s [%(levelname)s] %(name)-40s: %(message)s')
+    
     mylogger = logging.getLogger()
+    myformat = logging.Formatter('%(asctime)s [%(levelname)s] %(name)-40s: %(message)s')
+   
+    # logging to file
+    
     fh1 = logging.FileHandler(tc_log_file)
     fh1.setFormatter(myformat)
     mylogger.addHandler(fh1)
+   
+
+    # logging to stdout
+    ch=logging.StreamHandler(sys.stdout)
+    ch.setFormatter(myformat)
+    logger.addHandler(ch)
+
     mylogger.info("--TC_START %s", tcName)
+    mylogger.info("--Logfile: %s" % tc_log_file)
     mylogger.info("--DOC: %s" % request.function.__doc__)
+   
 
     # mark current tc for testcase to use
     os.environ['TC_LOGGER_CURR_DIR'] = tc_log_dir
@@ -50,12 +65,15 @@ def tc_logger(request):
     try:
         with open(docFile, 'w') as f:
             f.write(request.function.__doc__)
+            
     except:
         pass
 
     def fin():
-        print("Finishing tc_logger")
+        print("Finishing tc_logger fixture")
         mylogger.removeHandler(fh1)
+        mylogger.removeHandler(ch)
+        
     request.addfinalizer(fin)
 
 
@@ -113,7 +131,7 @@ def pytest_runtest_setup(item):
     pair with runtest_makereport
     fixture to mark testcase dependency on the previous testcase
     '''
-    #print("--in  runtest_setup %s" % item.function.__name__)
+    print("--in  runtest_setup %s" % item.function.__name__)
     if "incremental" in item.keywords.keys():
         previousfailed = getattr(item.parent, "_previousfailed", None)
         if previousfailed is not None:
@@ -130,17 +148,16 @@ def pytest_configure(config):
 
 def pytest_unconfigure(config):
 
-    #print("--in pytest_unconfig")
+    print("--in pytest_unconfig")
     # junit report parser. trigger this only if tc_logger_fixture is in use
     if os.environ.get('TC_LOGGER_CURR_DIR'):
         if os.path.exists('pytest.log'):
             log_dir = os.environ.get('LOG_DEST_DIR', 'artifacts')
-
-            logger.info("copy pytest.log to " + os.path.join(log_dir, 'pytest.log'))
+            print("copy pytest.log to " + os.path.join(log_dir, 'pytest.log'))
             shutil.copy2('pytest.log', os.path.join(log_dir, 'pytest.log'))
             os.remove('pytest.log')
         def junit_to_html():
-            logger.info("--parsing junit report")
+            print("--parsing junit report...")
             log_dir = os.environ.get('LOG_DEST_DIR', 'artifacts')
             pwd = os.path.dirname(os.path.realpath(__file__))
             parser = os.path.join(pwd, 'utils/junit_result_parser.py')
@@ -150,55 +167,3 @@ def pytest_unconfigure(config):
         config.add_cleanup(junit_to_html)
 
 
-############
-# functions
-############
-# def myassert(result, message):
-#     global assertCnt
-#     assertCnt += 1
-#     msg1 = "(ASSERT%s RESULT %s) %s" % (assertCnt, result, message)
-
-#     if result:
-#         color = 'green'
-#     else:
-#         color = 'red'
-#     if os.sys.stdout.isatty():
-#         print(termcolor.colored(msg1, color))
-
-#     logger.info(msg1)
-#     if not result:
-#         if os.environ.get('TC_LOGGER_CURR_DIR') and os.environ.get('MULTI_ASSERT') == 'true':
-#             tc_err_file = os.path.join(os.environ['TC_LOGGER_CURR_DIR'], 'errMsg.txt')
-#             if os.path.exists(tc_err_file):
-#                 # multi_assert fixure is used
-#                 with open(tc_err_file, 'a') as f:
-#                     f.write(msg1 + "\n")
-#         else:
-#             # no mulit_assert. just abort
-#             assert result, message
-
-
-# def get_tc_log_dir():
-#     '''
-#     must be used together with 'tc_logger' fixture
-#     '''
-#     return os.environ.get('TC_LOGGER_CURR_DIR')
-
-
-# def write_tc_log_file(filename, content, msg=""):
-#     '''
-#     save 'content' to 'a file under tclogdir
-#     putil=write_tc_log_file('myfile.txt','test1')
-#     '''
-
-#     cprint("-Create tc_log file '%s' %s" % (filename, msg), color='blue')
-#     filepath = os.path.join(get_tc_log_dir(), filename)
-#     with open(filepath, 'w') as f:
-#         f.write(content)
-#     logger.info("Wote <a href='%s'>%s</a> : %s" % (filename, filename, msg))
-
-
-# def cprint(msg, color='blue'):
-#     if os.sys.stdout.isatty():
-#         print(termcolor.colored(msg, color))
-#     logger.info(msg)

@@ -17,6 +17,8 @@
 
 ## How to run ?
 - Option1 : use virtualenv
+>  HTML Reports will be available under pytest_demo/artifacts/testcase.html after pytest execution
+
 ```
 source ENV.sh
 pytest example1

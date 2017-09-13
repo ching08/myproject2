@@ -321,6 +321,8 @@ def parse_xml(inDir):
             # create log_pytest.html
             try:
                 print("writting log_pytest.html", tcFile)
+                #if not os.path.exists(os.path.dirname(tcFile)):
+                #    os.makedirs(os.path.dirname(tcFile))
                 f1 = open(tcFile, 'w')
                 f1.write("<html><body>")
 
@@ -367,8 +369,10 @@ def parse_xml(inDir):
                 # f1.write(logtext.encode('utf8'))
                 if failtext:
                     f1.write("\n")
+                    f1.write("<font color='red'>")
                     f1.write("=" * 120 + "\nFailed messages BEGIN\n")
                     f1.write(failtext)
+                    f1.write("</font>")
 
                 f1.write("</pre>")
                 f1.write("</body></html>")
